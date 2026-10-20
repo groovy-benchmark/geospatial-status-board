@@ -1,0 +1,558 @@
+---
+grails:
+    profile: web
+    codegen:
+        defaultPackage: geospatial.statusboard
+    gorm:
+        reactor:
+            # Whether to translate GORM events into Reactor events
+            # Disabled by default for performance reasons
+            events: false
+    plugin:
+        springsecurity:
+            userLookup:
+                userDomainClassName: geospatial.statusboard.User
+                authorityJoinClassName: geospatial.statusboard.UserRole
+            authority:
+                className: geospatial.statusboard.Role
+            securityConfigType: Annotation
+            rejectIfNoRule: true
+            fii:
+                rejectPublicInvocations: false
+            successHandler:
+                defaultTargetUrl: '/'
+            logout:
+                afterLogoutUrl: '/login/auth?logout=true'
+            controllerAnnotations:
+                staticRules:
+                    - pattern: '/error'
+                      access: ['permitAll']
+                    - pattern: '/notFound'
+                      access: ['permitAll']
+                    - pattern: '/login/**'
+                      access: ['permitAll']
+                    - pattern: '/logout/**'
+                      access: ['permitAll']
+                    - pattern: '/logoff'
+                      access: ['permitAll']
+                    - pattern: '/shutdown'
+                      access: ['permitAll']
+                    - pattern: '/assets/**'
+                      access: ['permitAll']
+                    - pattern: '/**/js/**'
+                      access: ['permitAll']
+                    - pattern: '/**/css/**'
+                      access: ['permitAll']
+                    - pattern: '/**/images/**'
+                      access: ['permitAll']
+                    - pattern: '/**/favicon.ico'
+                      access: ['permitAll']
+            filterChain:
+                chainMap:
+                    - pattern: '/assets/**'
+                      filters: 'none'
+                    - pattern: '/**/js/**'
+                      filters: 'none'
+                    - pattern: '/**/css/**'
+                      filters: 'none'
+                    - pattern: '/**/images/**'
+                      filters: 'none'
+                    - pattern: '/**/favicon.ico'
+                      filters: 'none'
+                    - pattern: '/**'
+                      filters: 'JOINED_FILTERS'
+info:
+    app:
+        name: '@info.app.name@'
+        version: '@info.app.version@'
+        grailsVersion: '@info.app.grailsVersion@'
+spring:
+    jmx:
+        unique-names: true
+    main:
+        banner-mode: "off"
+    groovy:
+        template:
+            check-template-location: false
+    devtools:
+        restart:
+            additional-exclude:
+                - '*.gsp'
+                - '**/*.gsp'
+                - '*.gson'
+                - '**/*.gson'
+                - 'logback.groovy'
+                - '*.properties'
+server:
+    port: 8080
+    servlet:
+        context-path: /GeoStatusBoard
+geo:
+    health:
+        requestTimeoutMs: "${GEO_HEALTH_REQUEST_TIMEOUT_MS:2500}"
+    geoserver:
+        wfsUrl: "${GEOSERVER_WFS_URL:http://localhost:8081/geoserver/gsb/ows}"
+        workspace: "${GEOSERVER_WORKSPACE:gsb}"
+        defaultSrs: "${GEOSERVER_DEFAULT_SRS:EPSG:4326}"
+        requestTimeoutMs: "${GEOSERVER_REQUEST_TIMEOUT_MS:5000}"
+    geoai:
+        apiUrl: "${GEOAI_API_URL:http://localhost:8000}"
+        healthUrl: "${GEOAI_HEALTH_URL:http://localhost:8000/health}"
+        requestTimeoutMs: "${GEOAI_REQUEST_TIMEOUT_MS:10000}"
+    gateway:
+        enabled: "${GEOSPATIAL_GATEWAY_SIGNALR_ENABLED:true}"
+        hubUrl: "${GEOSPATIAL_GATEWAY_HUB_URL:http://localhost:7070/hubs/geospatial-updates}"
+        healthUrl: "${GEOSPATIAL_GATEWAY_HEALTH_URL:http://localhost:7070/health}"
+        reconnectDelayMs: "${GEOSPATIAL_GATEWAY_RECONNECT_DELAY_MS:5000}"
+        eventName: "${GEOSPATIAL_GATEWAY_LAYER_REFRESH_EVENT:layer.refresh_requested}"
+    openclaw:
+        enabled: "${OPENCLAW_ENABLED:true}"
+        gatewayUrl: "${OPENCLAW_GATEWAY_URL:http://localhost:18789}"
+        healthUrl: "${OPENCLAW_HEALTH_URL:http://localhost:18789/healthz}"
+        readyUrl: "${OPENCLAW_READY_URL:http://localhost:18789/readyz}"
+    incidentAnalyst:
+        enabled: "${INCIDENT_ANALYST_ENABLED:true}"
+        bridgeUrl: "${INCIDENT_ANALYST_BRIDGE_URL:http://127.0.0.1:8775/incident-analyst}"
+        requestTimeoutMs: "${INCIDENT_ANALYST_REQUEST_TIMEOUT_MS:8000}"
+        latitude: 35.6870
+        longitude: -105.9378
+        radiusKm: 220
+        supportRadiusM: 20000
+        maxIncidents: 20
+        minZoom: 6
+        maxZoom: 14
+        zoom: 7.25
+    viewer:
+        provider: maplibre
+        mapLibreJsUrl: https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js
+        mapLibreCssUrl: https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.css
+        mapDrawJsUrl: https://unpkg.com/@mapbox/mapbox-gl-draw@1.5.0/dist/mapbox-gl-draw.js
+        mapDrawCssUrl: https://unpkg.com/@mapbox/mapbox-gl-draw@1.5.0/dist/mapbox-gl-draw.css
+        mgrsJsUrl: https://cdn.jsdelivr.net/npm/mgrs@1.0.0/dist/mgrs.min.js
+        selectedBasemap: osmLight
+        basemaps:
+            blueOps:
+                title: Blue Ops
+                buttonLabel: Blue
+                tilesUrl: https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png
+                attribution: '(c) OpenStreetMap contributors, (c) CARTO'
+                background: '#183d66'
+                opacity: 0.72
+                preview: 'linear-gradient(135deg, #183d66 0%, #215782 52%, #69a7cb 100%)'
+                previewImage: https://basemaps.cartocdn.com/dark_all/12/846/1602.png
+            osmLight:
+                title: OpenStreetMap
+                buttonLabel: OSM
+                tilesUrl: https://tile.openstreetmap.org/{z}/{x}/{y}.png
+                attribution: '(c) OpenStreetMap contributors'
+                background: '#dce7f3'
+                opacity: 1
+                preview: 'linear-gradient(135deg, #e8f1f5 0%, #cddfb8 50%, #8fb7d3 100%)'
+                previewImage: https://tile.openstreetmap.org/12/846/1602.png
+            sentinelImagery:
+                title: Sentinel Imagery
+                buttonLabel: S2
+                tilesUrl: https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2020_3857/default/g/{z}/{y}/{x}.jpg
+                attribution: 'Sentinel-2 cloudless by EOX and ESA Copernicus'
+                background: '#102819'
+                opacity: 1
+                preview: 'linear-gradient(135deg, #163d23 0%, #536d35 42%, #718f9d 100%)'
+                previewImage: https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2020_3857/default/g/12/1602/846.jpg
+            esriImagery:
+                title: Esri Imagery
+                buttonLabel: Esri
+                tilesUrl: https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}
+                attribution: 'Esri, Maxar, Earthstar Geographics, and the GIS User Community'
+                background: '#102819'
+                opacity: 1
+                preview: 'linear-gradient(135deg, #1f3b24 0%, #657843 48%, #384b5c 100%)'
+                previewImage: https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/12/1602/846
+        tools:
+            basemapSelector: true
+            layerList: true
+            coordinates: true
+            mgrs: true
+            dms: true
+            measureDistance: true
+            drawing: true
+            drawArea: true
+            fullscreen: true
+            fitLayer: true
+            createIncidents: true
+            geoaiRequests: true
+            placeSearch: true
+            supportPoi: true
+            assistant: true
+        center:
+            - -106.0
+            - 34.5
+        zoom: 6
+        zoomLevels:
+            - 3
+            - 4
+            - 5
+            - 6
+            - 7
+            - 8
+            - 9
+            - 10
+            - 11
+            - 12
+            - 13
+            - 14
+            - 15
+            - 16
+        maxFeatures: 500
+    externalLayers:
+        noaaRadar:
+            title: NOAA Radar
+            category: Weather
+            kind: raster
+            enabled: false
+            tilesUrl: 'https://mapservices.weather.noaa.gov/eventdriven/rest/services/radar/radar_base_reflectivity_time/ImageServer/exportImage?bbox={bbox-epsg-3857}&bboxSR=3857&imageSR=3857&size=256,256&format=png32&transparent=true&f=image'
+            attribution: 'NOAA/NWS MRMS radar'
+            opacity: 0.72
+        nwsActiveAlerts:
+            title: NWS Active Alerts
+            category: Weather
+            kind: geojson
+            enabled: false
+            endpoint: 'https://api.weather.gov/alerts/active?status=actual&message_type=alert'
+            attribution: 'NOAA/National Weather Service'
+            color: '#f97316'
+            fillOpacity: 0.22
+            lineWidth: 2
+            labelField: event
+            idField: id
+            maxFeatures: 500
+        noaaSurfaceWinds:
+            title: NOAA Surface Winds
+            category: Weather
+            kind: raster
+            enabled: false
+            tilesUrl: 'https://mapservices.weather.noaa.gov/vector/rest/services/obs/surface_obs/MapServer/export?bbox={bbox-epsg-3857}&bboxSR=3857&imageSR=3857&size=256,256&format=png32&transparent=true&f=image&layers=show:210,220,230,240,250,260'
+            attribution: 'NOAA/NWS MADIS surface observations'
+            opacity: 0.86
+        currentWildlandFires:
+            title: Current Wildland Fires
+            category: Wildfire
+            kind: geojson
+            enabled: false
+            endpoint: 'https://services3.arcgis.com/T4QMspbfLg3qTGWY/arcgis/rest/services/WFIGS_Incident_Locations_Current/FeatureServer/0/query?where=1%3D1&outFields=*&returnGeometry=true&f=geojson&resultRecordCount=500&geometry={west}%2C{south}%2C{east}%2C{north}&geometryType=esriGeometryEnvelope&inSR=4326&spatialRel=esriSpatialRelIntersects&outSR=4326'
+            attribution: 'NIFC/WFIGS'
+            color: '#ef4444'
+            circleRadius: 6
+            labelField: IncidentName
+            idField: UniqueFireIdentifier
+            maxFeatures: 500
+        usgsEarthquakes:
+            title: USGS Earthquakes
+            category: Seismic
+            kind: geojson
+            enabled: false
+            endpoint: 'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson'
+            attribution: 'U.S. Geological Survey'
+            color: '#facc15'
+            circleRadius: 5
+            labelField: title
+            idField: code
+            maxFeatures: 500
+        usgsStreamGauges:
+            title: USGS Stream Gauges
+            category: Flood
+            kind: geojson
+            enabled: false
+            endpoint: 'https://api.waterdata.usgs.gov/ogcapi/v0/collections/latest-continuous/items?bbox={west},{south},{east},{north}&parameter_code=00060&f=json&limit=500'
+            attribution: 'U.S. Geological Survey Water Data'
+            color: '#0ea5e9'
+            circleRadius: 5
+            labelField: monitoring_location_name
+            idField: monitoring_location_id
+            maxFeatures: 500
+        openskyFlights:
+            title: OpenSky Flights
+            category: Flight Traffic
+            kind: opensky
+            enabled: false
+            endpoint: https://opensky-network.org/api/states/all
+            color: '#facc15'
+            maxFeatures: 500
+        publicSafetyCadPlaceholder:
+            title: Public Safety CAD
+            category: Public Safety
+            kind: unavailable
+            enabled: false
+            note: 'Live police, fire, and EMS activity is usually published by local CAD or open-data portals. Configure a local provider endpoint for this layer.'
+        roadTrafficPlaceholder:
+            title: Road Traffic
+            category: Road Traffic
+            kind: unavailable
+            enabled: false
+            note: 'Live road traffic generally requires a keyed provider such as TomTom, HERE, Mapbox, or Google.'
+    layers:
+        airportStatus:
+            title: Airport Status
+            category: Airport
+            enabled: true
+            typeName: 'gsb:index_airfields'
+            idField: site_name
+            labelField: site_name
+            geometryType: Geometry
+            color: '#2563eb'
+            iconSet: airport
+        currentSIT:
+            title: Current Airfield Status
+            category: Airport
+            typeName: 'gsb:index_airfields'
+            idField: site_name
+            labelField: site_name
+            geometryType: Geometry
+            color: '#0f766e'
+            iconSet: airport
+        airfieldSurfaceStatus:
+            title: Airfield Surface Status
+            category: Airport
+            typeName: 'gsb:runwaydamagepolys'
+            idField: objectid
+            labelField: label
+            geometryType: Geometry
+            color: '#d97706'
+        navaid:
+            title: NAVAIDs
+            category: Airport
+            typeName: 'gsb:navigationalaid'
+            idField: installationid
+            labelField: sdsfeaturename
+            geometryType: Geometry
+            color: '#7c3aed'
+        engineerAssets:
+            title: Engineer Assets
+            category: Assets
+            typeName: 'gsb:engineer_assets'
+            idField: airfield_name
+            labelField: item_name
+            geometryType: Geometry
+            color: '#475569'
+        fireFightingAssets:
+            title: Fire Fighting Assets
+            category: Assets
+            typeName: 'gsb:fire_fighting_assets'
+            idField: airfield_name
+            labelField: item_name
+            geometryType: Geometry
+            color: '#dc2626'
+        utilityStatus:
+            title: Utility Status
+            category: Assets
+            typeName: 'gsb:utility_status'
+            idField: airfield_name
+            labelField: airfield_name
+            geometryType: Geometry
+            color: '#16a34a'
+        cogFootprints:
+            title: COG Footprints
+            category: GeoAI
+            enabled: true
+            typeName: 'gsb:geoai_cog_footprints'
+            idField: cog_id
+            labelField: file_name
+            geometryType: Geometry
+            color: '#f59e0b'
+        detectedRoads:
+            title: GeoAI Detections
+            category: GeoAI
+            enabled: true
+            typeName: 'gsb:detected_roads'
+            idField: source_tile
+            labelField: class_name
+            geometryType: Geometry
+            color: '#0891b2'
+            filterField: job_id
+            filterLabel: Job
+            filterAllLabel: All Jobs
+            maxFeatures: 5000
+        currentIncidents:
+            title: Current Incidents
+            category: Incident Tracking
+            typeName: 'gsb:current_incidents'
+            idField: mgrs_coord
+            labelField: incident_id
+            geometryType: Geometry
+            color: '#b91c1c'
+            iconSet: femaIncident
+            iconField: event_type
+            popupFields:
+                - incident_id
+                - workflow_status
+                - event_type
+                - event_cat
+                - event_name
+                - event_desc
+                - mgrs_coord
+                - base
+                - sig_event
+                - air_ops_affected
+                - source
+                - updated_by
+        archiveIncidents:
+            title: Archive Incidents
+            category: Incident Tracking
+            typeName: 'gsb:archive_incidents'
+            idField: mgrs_coord
+            labelField: incident_id
+            geometryType: Geometry
+            color: '#9333ea'
+            iconSet: femaIncident
+            iconField: event_type
+            popupFields:
+                - incident_id
+                - archive_action
+                - workflow_status
+                - event_type
+                - event_cat
+                - event_name
+                - event_desc
+                - mgrs_coord
+                - base
+                - sig_event
+                - air_ops_affected
+                - archived_at
+hibernate:
+    cache:
+        queries: false
+        use_second_level_cache: false
+        use_query_cache: false
+dataSource:
+    pooled: true
+    jmxExport: true
+    driverClassName: org.h2.Driver
+    username: sa
+    password: ''
+dataSources:
+    geodbthree:
+        pooled: true
+        jmxExport: true
+        driverClassName: org.h2.Driver
+        username: sa
+        password: ''
+    geodbfour:
+        pooled: true
+        jmxExport: true
+        driverClassName: org.h2.Driver
+        username: sa
+        password: ''
+environments:
+    development:
+        dataSource:
+            dbCreate: create-drop
+            url: jdbc:h2:mem:devDb;LOCK_TIMEOUT=10000;DB_CLOSE_ON_EXIT=FALSE
+        dataSources:
+            geodbthree:
+                dbCreate: create-drop
+                url: jdbc:h2:mem:geodbthreeDevDb;LOCK_TIMEOUT=10000;DB_CLOSE_ON_EXIT=FALSE
+            geodbfour:
+                dbCreate: create-drop
+                url: jdbc:h2:mem:geodbfourDevDb;LOCK_TIMEOUT=10000;DB_CLOSE_ON_EXIT=FALSE
+        management:
+            endpoints:
+                enabled-by-default: true
+                web:
+                    base-path: '/actuator'
+                    exposure:
+                        include: '*'
+    test:
+        dataSource:
+            dbCreate: update
+            url: jdbc:h2:mem:testDb;LOCK_TIMEOUT=10000;DB_CLOSE_ON_EXIT=FALSE
+        dataSources:
+            geodbthree:
+                dbCreate: update
+                url: jdbc:h2:mem:geodbthreeTestDb;LOCK_TIMEOUT=10000;DB_CLOSE_ON_EXIT=FALSE
+            geodbfour:
+                dbCreate: update
+                url: jdbc:h2:mem:geodbfourTestDb;LOCK_TIMEOUT=10000;DB_CLOSE_ON_EXIT=FALSE
+    production:
+        dataSource:
+            dbCreate: none
+            url: jdbc:h2:./prodDb;LOCK_TIMEOUT=10000;DB_CLOSE_ON_EXIT=FALSE
+            properties:
+                jmxEnabled: true
+                initialSize: 5
+                maxActive: 50
+                minIdle: 5
+                maxIdle: 25
+                maxWait: 10000
+                maxAge: 600000
+                timeBetweenEvictionRunsMillis: 5000
+                minEvictableIdleTimeMillis: 60000
+                validationQuery: SELECT 1
+                validationQueryTimeout: 3
+                validationInterval: 15000
+                testOnBorrow: true
+                testWhileIdle: true
+                testOnReturn: false
+                jdbcInterceptors: ConnectionState
+                defaultTransactionIsolation: 2 # TRANSACTION_READ_COMMITTED
+        dataSources:
+            geodbthree:
+                dbCreate: none
+                url: jdbc:h2:./prodGeodbThreeDb;LOCK_TIMEOUT=10000;DB_CLOSE_ON_EXIT=FALSE
+            geodbfour:
+                dbCreate: none
+                url: jdbc:h2:./prodGeodbFourDb;LOCK_TIMEOUT=10000;DB_CLOSE_ON_EXIT=FALSE
+        management:
+            endpoints:
+                enabled-by-default: false
+
+---
+grails:
+    mime:
+        disable:
+            accept:
+                header:
+                    userAgents:
+                        - Gecko
+                        - WebKit
+                        - Presto
+                        - Trident
+        types:
+            all: '*/*'
+            atom: application/atom+xml
+            css: text/css
+            csv: text/csv
+            form: application/x-www-form-urlencoded
+            html:
+              - text/html
+              - application/xhtml+xml
+            js: text/javascript
+            json:
+              - application/json
+              - text/json
+            multipartForm: multipart/form-data
+            pdf: application/pdf
+            rss: application/rss+xml
+            text: text/plain
+            hal:
+              - application/hal+json
+              - application/hal+xml
+            xml:
+              - text/xml
+              - application/xml
+    urlmapping:
+        cache:
+            maxsize: 1000
+    controllers:
+        defaultScope: singleton
+    converters:
+        encoding: UTF-8
+    views:
+        default:
+            codec: html
+        gsp:
+            encoding: UTF-8
+            htmlcodec: xml
+            codecs:
+                expression: html
+                scriptlet: html
+                taglib: none
+                staticparts: none

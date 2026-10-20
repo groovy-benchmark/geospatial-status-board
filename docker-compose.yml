@@ -1,0 +1,222 @@
+name: geospatial-status-board
+
+services:
+  postgis:
+    image: ${POSTGIS_IMAGE:-postgis/postgis:16-3.4}
+    container_name: gsb-postgis
+    environment:
+      POSTGRES_DB: ${POSTGIS_DB:-geostatusboard}
+      POSTGRES_USER: ${POSTGIS_USER:-gsb}
+      POSTGRES_PASSWORD: ${POSTGIS_PASSWORD:-gsb}
+    ports:
+      - "${POSTGIS_PORT:-5432}:5432"
+    volumes:
+      - gsb-postgis-data:/var/lib/postgresql/data
+      - ./docker/postgis/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  geoserver:
+    image: ${GEOSERVER_IMAGE:-docker.osgeo.org/geoserver:2.28.2}
+    container_name: gsb-geoserver
+    depends_on:
+      postgis:
+        condition: service_healthy
+    environment:
+      GEOSERVER_ADMIN_USER: ${GEOSERVER_ADMIN_USER:-admin}
+      GEOSERVER_ADMIN_PASSWORD: ${GEOSERVER_ADMIN_PASSWORD:-geoserver}
+      GEOSERVER_DATA_DIR: /opt/geoserver_data
+      SKIP_DEMO_DATA: "true"
+      CORS_ENABLED: "true"
+      CORS_ALLOWED_ORIGINS: "${GEOSERVER_CORS_ALLOWED_ORIGINS:-*}"
+      CORS_ALLOWED_METHODS: "GET,POST,PUT,DELETE,HEAD,OPTIONS"
+      CORS_ALLOWED_HEADERS: "Origin,Accept,X-Requested-With,Content-Type,Access-Control-Request-Method,Access-Control-Request-Headers,Authorization"
+    ports:
+      - "${GEOSERVER_PORT:-8081}:8080"
+    volumes:
+      - gsb-geoserver-data:/opt/geoserver_data
+
+  geoai:
+    profiles: ["geoai"]
+    build:
+      context: ${GEOAI_CONTEXT:-../geoai-asset-detection-platform}
+      dockerfile: Dockerfile
+      args:
+        PYTORCH_INDEX_URL: ${GEOAI_PYTORCH_INDEX_URL:-https://download.pytorch.org/whl/cu126}
+    image: ${GEOAI_IMAGE:-geoai-road-detection-platform:dev}
+    container_name: gsb-geoai
+    gpus:
+      - driver: nvidia
+        count: ${GEOAI_NVIDIA_DEVICE_COUNT:-1}
+        capabilities: [gpu]
+    depends_on:
+      postgis:
+        condition: service_healthy
+    environment:
+      GEOAI_WORKFLOW_CATALOG: ${GEOAI_WORKFLOW_CATALOG:-config/workflows.example.yaml}
+      GEOAI_POSTGIS_URL: postgresql+psycopg://${POSTGIS_USER:-gsb}:${POSTGIS_PASSWORD:-gsb}@postgis:5432/${POSTGIS_DB:-geostatusboard}
+      GEOAI_DOWNLOAD_HF_MODEL: ${GEOAI_DOWNLOAD_HF_MODEL:-true}
+      GEOAI_FETCH_SAMPLE_COG: ${GEOAI_FETCH_SAMPLE_COG:-true}
+      GEOAI_CORS_ORIGINS: ${GEOAI_CORS_ORIGINS:-http://localhost:8080,http://127.0.0.1:8080,http://localhost:18088,http://127.0.0.1:18088,http://localhost:18192,http://127.0.0.1:18192}
+      NVIDIA_VISIBLE_DEVICES: ${GEOAI_NVIDIA_VISIBLE_DEVICES:-all}
+      NVIDIA_DRIVER_CAPABILITIES: ${GEOAI_NVIDIA_DRIVER_CAPABILITIES:-compute,utility}
+    ports:
+      - "${GEOAI_PORT:-8000}:8000"
+    volumes:
+      - ${GEOAI_CONTEXT:-../geoai-asset-detection-platform}/src:/app/src
+      - ${GEOAI_CONTEXT:-../geoai-asset-detection-platform}/config:/app/config
+      - ${GEOAI_CONTEXT:-../geoai-asset-detection-platform}/scripts:/app/scripts
+      - ${GEOAI_CONTEXT:-../geoai-asset-detection-platform}/sql:/app/sql
+      - ${GEOAI_CONTEXT:-../geoai-asset-detection-platform}/data:/app/data
+      - ${GEOAI_CONTEXT:-../geoai-asset-detection-platform}/models:/app/models
+      - ${GEOAI_CONTEXT:-../geoai-asset-detection-platform}/outputs:/app/outputs
+      - ${GEOAI_CONTEXT:-../geoai-asset-detection-platform}/logs:/app/logs
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=5).read()"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 15m
+
+  openclaw-gateway:
+    profiles: ["openclaw"]
+    image: ${OPENCLAW_IMAGE:-ghcr.io/openclaw/openclaw:latest}
+    container_name: gsb-openclaw-gateway
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      HOME: /home/node
+      OPENCLAW_HOME: /home/node
+      TERM: xterm-256color
+      OPENCLAW_STATE_DIR: /home/node/.openclaw
+      OPENCLAW_CONFIG_PATH: /home/node/.openclaw/openclaw.json
+      OPENCLAW_CONFIG_DIR: /home/node/.openclaw
+      OPENCLAW_WORKSPACE_DIR: /home/node/.openclaw/workspace
+      OPENCLAW_GATEWAY_TOKEN: ${OPENCLAW_GATEWAY_TOKEN:-}
+      OPENCLAW_ALLOW_INSECURE_PRIVATE_WS: ${OPENCLAW_ALLOW_INSECURE_PRIVATE_WS:-}
+      OPENCLAW_DISABLE_BONJOUR: ${OPENCLAW_DISABLE_BONJOUR:-1}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+      OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: ${OTEL_EXPORTER_OTLP_TRACES_ENDPOINT:-}
+      OTEL_EXPORTER_OTLP_METRICS_ENDPOINT: ${OTEL_EXPORTER_OTLP_METRICS_ENDPOINT:-}
+      OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: ${OTEL_EXPORTER_OTLP_LOGS_ENDPOINT:-}
+      OTEL_EXPORTER_OTLP_PROTOCOL: ${OTEL_EXPORTER_OTLP_PROTOCOL:-http/protobuf}
+      OTEL_SERVICE_NAME: ${OTEL_SERVICE_NAME:-geospatial-status-board-openclaw}
+      OTEL_SEMCONV_STABILITY_OPT_IN: ${OTEL_SEMCONV_STABILITY_OPT_IN:-}
+      OPENCLAW_OTEL_PRELOADED: ${OPENCLAW_OTEL_PRELOADED:-}
+      CLAUDE_AI_SESSION_KEY: ${CLAUDE_AI_SESSION_KEY:-}
+      CLAUDE_WEB_SESSION_KEY: ${CLAUDE_WEB_SESSION_KEY:-}
+      CLAUDE_WEB_COOKIE: ${CLAUDE_WEB_COOKIE:-}
+      TZ: ${OPENCLAW_TZ:-UTC}
+    ports:
+      - "${OPENCLAW_GATEWAY_PORT:-18789}:18789"
+      - "${OPENCLAW_BRIDGE_PORT:-18790}:18790"
+      - "${OPENCLAW_MSTEAMS_PORT:-3978}:3978"
+    volumes:
+      - gsb-openclaw-state:/home/node/.openclaw
+      - gsb-openclaw-workspace:/home/node/.openclaw/workspace
+      - gsb-openclaw-auth-secrets:/home/node/.config/openclaw
+    cap_drop:
+      - NET_RAW
+      - NET_ADMIN
+    security_opt:
+      - no-new-privileges:true
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    init: true
+    restart: unless-stopped
+    command: ["node", "dist/index.js", "gateway", "--bind", "${OPENCLAW_GATEWAY_BIND:-lan}", "--port", "18789"]
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:18789/healthz').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  openclaw-cli:
+    profiles: ["openclaw"]
+    image: ${OPENCLAW_IMAGE:-ghcr.io/openclaw/openclaw:latest}
+    network_mode: "service:openclaw-gateway"
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      HOME: /home/node
+      OPENCLAW_HOME: /home/node
+      TERM: xterm-256color
+      OPENCLAW_STATE_DIR: /home/node/.openclaw
+      OPENCLAW_CONFIG_PATH: /home/node/.openclaw/openclaw.json
+      OPENCLAW_CONFIG_DIR: /home/node/.openclaw
+      OPENCLAW_WORKSPACE_DIR: /home/node/.openclaw/workspace
+      OPENCLAW_GATEWAY_TOKEN: ${OPENCLAW_GATEWAY_TOKEN:-}
+      OPENCLAW_ALLOW_INSECURE_PRIVATE_WS: ${OPENCLAW_ALLOW_INSECURE_PRIVATE_WS:-}
+      BROWSER: echo
+      CLAUDE_AI_SESSION_KEY: ${CLAUDE_AI_SESSION_KEY:-}
+      CLAUDE_WEB_SESSION_KEY: ${CLAUDE_WEB_SESSION_KEY:-}
+      CLAUDE_WEB_COOKIE: ${CLAUDE_WEB_COOKIE:-}
+      TZ: ${OPENCLAW_TZ:-UTC}
+    volumes:
+      - gsb-openclaw-state:/home/node/.openclaw
+      - gsb-openclaw-workspace:/home/node/.openclaw/workspace
+      - gsb-openclaw-auth-secrets:/home/node/.config/openclaw
+    cap_drop:
+      - NET_RAW
+      - NET_ADMIN
+    security_opt:
+      - no-new-privileges:true
+    stdin_open: true
+    tty: true
+    init: true
+    entrypoint: ["node", "dist/index.js"]
+    depends_on:
+      - openclaw-gateway
+
+  geoserver-init:
+    image: ${CURL_IMAGE:-curlimages/curl:8.8.0}
+    profiles: ["tools"]
+    depends_on:
+      geoserver:
+        condition: service_started
+    environment:
+      GEOSERVER_REST_URL: http://geoserver:8080/geoserver/rest
+      GEOSERVER_ADMIN_USER: ${GEOSERVER_ADMIN_USER:-admin}
+      GEOSERVER_ADMIN_PASSWORD: ${GEOSERVER_ADMIN_PASSWORD:-geoserver}
+      GEOSERVER_WORKSPACE: ${GEOSERVER_WORKSPACE:-gsb}
+      GEOSERVER_STORE: ${GEOSERVER_STORE:-postgis}
+      GEOSERVER_WFS_MAX_FEATURES: ${GEOSERVER_WFS_MAX_FEATURES:-5000}
+      POSTGIS_HOST: postgis
+      POSTGIS_PORT: 5432
+      POSTGIS_DB: ${POSTGIS_DB:-geostatusboard}
+      POSTGIS_USER: ${POSTGIS_USER:-gsb}
+      POSTGIS_PASSWORD: ${POSTGIS_PASSWORD:-gsb}
+      POSTGIS_SCHEMA: ${POSTGIS_SCHEMA:-public}
+    volumes:
+      - ./docker/geoserver/bootstrap:/bootstrap:ro
+    entrypoint: ["/bin/sh", "/bootstrap/configure-geoserver.sh"]
+
+  postgis-spatialize:
+    image: ${POSTGRES_CLIENT_IMAGE:-postgres:16}
+    profiles: ["tools"]
+    depends_on:
+      postgis:
+        condition: service_healthy
+    environment:
+      POSTGIS_HOST: postgis
+      POSTGIS_PORT: 5432
+      POSTGIS_DB: ${POSTGIS_DB:-geostatusboard}
+      POSTGIS_USER: ${POSTGIS_USER:-gsb}
+      POSTGIS_PASSWORD: ${POSTGIS_PASSWORD:-gsb}
+    volumes:
+      - ./docs/postgis-spatialization.sql:/sql/postgis-spatialization.sql:ro
+      - ./docker/postgis/spatialize.sh:/spatialize.sh:ro
+    entrypoint: ["/bin/sh", "/spatialize.sh"]
+
+volumes:
+  gsb-postgis-data:
+  gsb-geoserver-data:
+  gsb-openclaw-state:
+  gsb-openclaw-workspace:
+  gsb-openclaw-auth-secrets:

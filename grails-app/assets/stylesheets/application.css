@@ -1,0 +1,342 @@
+/*
+* This is a manifest file that'll be compiled into application.css, which will include all the files
+* listed below.
+*
+* Any CSS file within this directory can be referenced here using a relative path.
+*
+* You're free to add application-wide styles to this file and they'll appear at the top of the
+* compiled file, but it's generally better to create a new file per style scope.
+*
+*= require bootstrap
+*= require grails
+*= require main
+*= require mobile
+*= require_self
+*/
+
+.navbar-static-top {
+    background: #24313f;
+    border-color: #24313f;
+}
+
+.geospatial-status-board-brand {
+    font-weight: 700;
+    letter-spacing: 0;
+}
+
+.geospatial-status-board-user {
+    color: #dce6ed;
+    margin-right: 1rem;
+}
+
+.geospatial-status-board-logout-form {
+    align-items: center;
+    display: flex;
+    margin: 0.25rem 0 0 0.75rem;
+}
+
+.geospatial-status-board-logout-button {
+    align-items: center;
+    box-sizing: border-box;
+    display: inline-flex;
+    height: 31px;
+    justify-content: center;
+    line-height: 1;
+    padding: 0 0.72rem;
+}
+
+.geospatial-status-board-admin-button {
+    align-items: center;
+    border: 1px solid rgba(255, 255, 255, 0.65);
+    border-radius: 6px;
+    box-sizing: border-box;
+    color: #f8fbfd;
+    display: inline-flex;
+    font-size: 0;
+    height: 31px;
+    justify-content: center;
+    line-height: 1;
+    margin: 0.25rem 0 0 0.5rem;
+    text-decoration: none;
+    width: 31px;
+}
+
+.navbar-dark .geospatial-status-board-admin-button {
+    align-items: center;
+    box-sizing: border-box;
+    color: #f8fbfd !important;
+    display: inline-flex;
+    font-size: 0 !important;
+    justify-content: center;
+    padding: 0;
+}
+
+.geospatial-status-board-admin-button svg {
+    display: block;
+    flex: 0 0 auto;
+    height: 17px;
+    width: 17px;
+}
+
+.geospatial-status-board-admin-button:hover,
+.geospatial-status-board-admin-button:focus {
+    background: rgba(255, 255, 255, 0.15);
+    color: #ffffff;
+    text-decoration: none;
+}
+
+.geospatial-status-board-page,
+.auth-page {
+    min-height: calc(100vh - 122px);
+    background: #eef3f4;
+}
+
+.geospatial-status-board-page {
+    padding: 2rem;
+}
+
+.geospatial-status-board-hero {
+    align-items: flex-end;
+    background: #ffffff;
+    border-bottom: 4px solid #1f7a8c;
+    display: flex;
+    justify-content: space-between;
+    margin: 0 auto 1.5rem auto;
+    max-width: 1120px;
+    padding: 2rem;
+}
+
+.geospatial-status-board-kicker {
+    color: #1f7a8c;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+}
+
+.geospatial-status-board-hero h1,
+.auth-panel h1 {
+    color: #17212b;
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0 0 0.5rem 0;
+}
+
+.geospatial-status-board-subtitle {
+    color: #56616b;
+    font-size: 1rem;
+    margin: 0;
+    max-width: 620px;
+}
+
+.geospatial-status-board-session {
+    background: #f6f8f8;
+    border: 1px solid #d7e0e3;
+    border-radius: 6px;
+    color: #56616b;
+    min-width: 220px;
+    padding: 1rem;
+}
+
+.geospatial-status-board-session span,
+.geospatial-status-board-session strong {
+    display: block;
+}
+
+.geospatial-status-board-session strong {
+    color: #17212b;
+    font-size: 0.9rem;
+    margin-top: 0.25rem;
+}
+
+.geospatial-status-board-section {
+    margin: 0 auto 1.5rem auto;
+    max-width: 1120px;
+}
+
+.geospatial-status-board-section-title {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+}
+
+.geospatial-status-board-section-title h2 {
+    color: #17212b;
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.geospatial-status-board-module-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+}
+
+.geospatial-status-board-link-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+}
+
+.geospatial-status-board-link-grid-compact {
+    grid-template-columns: repeat(auto-fit, minmax(285px, 1fr));
+}
+
+.geospatial-status-board-module,
+.geospatial-status-board-hub-link {
+    background: #ffffff;
+    border: 1px solid #d7e0e3;
+    border-radius: 6px;
+    color: #17212b;
+    display: block;
+    min-height: 120px;
+    padding: 1rem;
+    text-decoration: none;
+}
+
+.geospatial-status-board-module:hover,
+.geospatial-status-board-module:focus,
+.geospatial-status-board-hub-link:hover,
+.geospatial-status-board-hub-link:focus {
+    border-color: #1f7a8c;
+    color: #17212b;
+    text-decoration: none;
+}
+
+.geospatial-status-board-module span,
+.geospatial-status-board-module small,
+.geospatial-status-board-hub-link span,
+.geospatial-status-board-hub-link small,
+.geospatial-status-board-hub-link code {
+    display: block;
+}
+
+.geospatial-status-board-module span,
+.geospatial-status-board-hub-link span {
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.geospatial-status-board-module small,
+.geospatial-status-board-hub-link small {
+    color: #6d7881;
+    line-height: 1.35;
+}
+
+.geospatial-status-board-hub-link code {
+    background: #edf4f7;
+    border: 1px solid #d5e2e7;
+    border-radius: 4px;
+    color: #315063;
+    font-size: 0.74rem;
+    margin-top: 0.75rem;
+    overflow-wrap: anywhere;
+    padding: 0.35rem 0.45rem;
+    white-space: normal;
+}
+
+.geospatial-status-board-api-method {
+    background: #17374a;
+    border-radius: 4px;
+    color: #ffffff;
+    display: inline-block;
+    font-size: 0.68rem;
+    letter-spacing: 0;
+    line-height: 1;
+    margin-top: 0.75rem;
+    padding: 0.32rem 0.42rem;
+}
+
+.geospatial-status-board-api-link {
+    border-left: 4px solid #1f7a8c;
+}
+
+.geospatial-status-board-integration-link {
+    border-left: 4px solid #806f2f;
+}
+
+.geospatial-status-board-inventory-section {
+    padding-bottom: 1rem;
+}
+
+.geospatial-status-board-empty-state {
+    background: #ffffff;
+    border: 1px solid #d7e0e3;
+    border-radius: 6px;
+    margin: 0 auto;
+    max-width: 720px;
+    padding: 2rem;
+}
+
+.geospatial-status-board-empty-state h1,
+.geospatial-status-board-empty-state h3 {
+    color: #17212b;
+    font-weight: 700;
+    margin-top: 0;
+}
+
+.geospatial-status-board-empty-state p {
+    color: #56616b;
+    margin-bottom: 0;
+}
+
+.auth-page {
+    align-items: center;
+    display: flex;
+    justify-content: center;
+    padding: 2rem;
+}
+
+.auth-panel {
+    background: #ffffff;
+    border: 1px solid #d7e0e3;
+    border-radius: 6px;
+    max-width: 420px;
+    padding: 2rem;
+    width: 100%;
+}
+
+.auth-message {
+    background: #fff6df;
+    border: 1px solid #e3bd62;
+    border-radius: 6px;
+    color: #604600;
+    margin-bottom: 1rem;
+    padding: 0.75rem;
+}
+
+.auth-message-success {
+    background: #eaf6ef;
+    border-color: #8bc59f;
+    color: #245736;
+}
+
+.auth-check {
+    margin-bottom: 1rem;
+}
+
+.geospatial-status-board-footer {
+    background: #17212b;
+    color: #dce6ed;
+    padding: 1rem 2rem;
+}
+
+@media (max-width: 720px) {
+    .geospatial-status-board-page {
+        padding: 1rem;
+    }
+
+    .geospatial-status-board-hero {
+        align-items: flex-start;
+        display: block;
+        padding: 1.25rem;
+    }
+
+    .geospatial-status-board-session {
+        margin-top: 1rem;
+        min-width: 0;
+    }
+}

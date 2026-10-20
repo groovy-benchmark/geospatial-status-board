@@ -1,0 +1,5 @@
+rootProject.name = 'geospatial-status-board'
+
+include 'gsb-airport'
+include 'gsb-incidents'
+
