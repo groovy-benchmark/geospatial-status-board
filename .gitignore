@@ -14,3 +14,13 @@ out/
 .env
 grails*.log
 logs/*.log
+
+# Claude
+.claude/
+CLAUDE.md
+CLAUDE-SECURITY-*/
+claude_security_results/
+/*.sarif
+
+# Local runtime data (H2 files from the production environment)
+/prod*Db.*
